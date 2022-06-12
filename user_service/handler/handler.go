@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/AndreyAndreevich/articles/user_service/api"
@@ -35,6 +36,7 @@ func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.useCase.CreateUser(r.Context(), request.Name)
 	if err != nil {
+		fmt.Println("error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -47,6 +49,7 @@ func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewEncoder(w).Encode(&response)
 	if err != nil {
+		fmt.Println("error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

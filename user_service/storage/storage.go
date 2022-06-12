@@ -31,7 +31,7 @@ func New(dsn string) (*storage, error) {
 
 func (s *storage) CreateUser(ctx context.Context, name string) (domain.User, error) {
 	query := `INSERT INTO users (name) VALUES ($1) RETURNING id, name, balance, created_at, updated_at`
-	res, err := s.db.NamedQueryContext(ctx, query, name)
+	res, err := s.db.QueryxContext(ctx, query, name)
 	if err != nil {
 		return domain.User{}, err
 	}
