@@ -1,0 +1,11 @@
+version: '3.7'
+services:
+  db:
+    image: postgres
+    container_name: user-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=user
+      - POSTGRES_DB=user
