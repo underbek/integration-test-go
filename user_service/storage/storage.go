@@ -48,3 +48,15 @@ func (s *storage) CreateUser(ctx context.Context, name string) (domain.User, err
 
 	return resUser, nil
 }
+
+func (s *storage) GetUser(ctx context.Context, id int) (domain.User, error) {
+	query := `SELECT id, name, balance FROM users WHERE id = $1`
+
+	var user domain.User
+	err := s.db.GetContext(ctx, &user, query, id)
+	if err != nil {
+		return domain.User{}, err
+	}
+
+	return user, nil
+}

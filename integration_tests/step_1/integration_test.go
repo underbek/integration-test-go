@@ -3,14 +3,14 @@ package step_1
 import (
 	"bytes"
 	"log"
-	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/AndreyAndreevich/articles/user_service/handler"
+	"github.com/AndreyAndreevich/articles/user_service/server"
 	"github.com/AndreyAndreevich/articles/user_service/storage"
 	"github.com/AndreyAndreevich/articles/user_service/use_case"
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -35,12 +35,8 @@ func TestCreateUser(t *testing.T) {
 	requestBody := `{"name": "test_name"}`
 
 	// use httptest
-	request := httptest.NewRequest(http.MethodPost, "/users", bytes.NewBufferString(requestBody))
-	w := httptest.NewRecorder()
-	h.CreateUser(w, request)
+	srv := httptest.NewServer(server.New("", h).Router)
 
-	res := w.Result()
-	defer res.Body.Close()
-
-	assert.Equal(t, http.StatusOK, res.StatusCode)
+	_, err = srv.Client().Post(srv.URL+"/users", "", bytes.NewBufferString(requestBody))
+	assert.NoError(t, err)
 }

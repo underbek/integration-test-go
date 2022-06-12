@@ -11,3 +11,9 @@ type CreateUserResponse struct {
 	Name    string          `json:"name"`
 	Balance decimal.Decimal `json:"balance"`
 }
+
+type GetUserResponse struct {
+	ID      int             `json:"ID"`
+	Name    string          `json:"name"`
+	Balance decimal.Decimal `json:"balance"`
+}
