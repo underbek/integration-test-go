@@ -55,7 +55,7 @@ func TestGetUser(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	useCase := use_case.New(repo)
+	useCase := use_case.New(repo, nil)
 	h := handler.New(useCase)
 	///
 

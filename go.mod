@@ -7,6 +7,7 @@ require (
 	github.com/go-testfixtures/testfixtures/v3 v3.7.0
 	github.com/gorilla/mux v1.7.2
 	github.com/jackc/pgx/v4 v4.16.1
+	github.com/jarcoal/httpmock v1.2.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/lib/pq v1.10.6
 	github.com/pressly/goose/v3 v3.5.3

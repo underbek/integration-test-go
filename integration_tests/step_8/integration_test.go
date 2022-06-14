@@ -11,8 +11,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jarcoal/httpmock"
+
 	"github.com/AndreyAndreevich/articles/integration_tests/step_2"
 	"github.com/AndreyAndreevich/articles/user_service/api"
+	"github.com/AndreyAndreevich/articles/user_service/billing"
 	"github.com/AndreyAndreevich/articles/user_service/handler"
 	"github.com/AndreyAndreevich/articles/user_service/migrate"
 	"github.com/AndreyAndreevich/articles/user_service/server"
@@ -21,6 +24,8 @@ import (
 	"github.com/go-testfixtures/testfixtures/v3"
 	"github.com/stretchr/testify/suite"
 )
+
+const billingAddr = "http://localhost:8085"
 
 type TestSuite struct {
 	suite.Suite
@@ -49,7 +54,14 @@ func (s *TestSuite) SetupSuite() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	useCase := use_case.New(repo, nil)
+
+	//mock client
+	mockClient := &http.Client{}
+	httpmock.ActivateNonDefault(mockClient)
+
+	//added billing client
+	billingClient := billing.New(mockClient, billingAddr)
+	useCase := use_case.New(repo, billingClient)
 	h := handler.New(useCase)
 	///
 
@@ -65,14 +77,19 @@ func (s *TestSuite) TearDownSuite() {
 	s.Require().NoError(s.psqlContainer.Terminate(ctx))
 
 	s.server.Close()
+
+	httpmock.DeactivateAndReset()
 }
 
 /*
---- PASS: TestSuite_Run (3.53s)
+--- PASS: TestSuite_Run (4.07s)
 === RUN   TestSuite_Run/TestCreateUser
     --- PASS: TestSuite_Run/TestCreateUser (0.01s)
+=== RUN   TestSuite_Run/TestDepositBalance
+    --- PASS: TestSuite_Run/TestDepositBalance (0.06s)
 === RUN   TestSuite_Run/TestGetUser
-    --- PASS: TestSuite_Run/TestGetUser (0.05s)
+    --- PASS: TestSuite_Run/TestGetUser (0.07s)
+PASS
 */
 func TestSuite_Run(t *testing.T) {
 	suite.Run(t, new(TestSuite))
@@ -129,4 +146,45 @@ func (s *TestSuite) TestGetUser() {
 	s.Assert().Equal(1, response.ID)
 	s.Assert().Equal("test_name", response.Name)
 	s.Assert().Equal("0", response.Balance.String())
+}
+
+func (s *TestSuite) TestDepositBalance() {
+	// create fixtures
+	db, err := sql.Open("postgres", s.psqlContainer.GetDSN())
+	s.Require().NoError(err)
+
+	fixtures, err := testfixtures.New(
+		testfixtures.Database(db),
+		testfixtures.Dialect("postgres"),
+		testfixtures.Directory("../step_5/fixtures/storage"),
+	)
+	s.Require().NoError(err)
+	s.Require().NoError(fixtures.Load())
+	//
+
+	// mock http call
+	httpmock.RegisterResponder(
+		http.MethodPost,
+		billingAddr+"/deposit",
+		httpmock.NewStringResponder(http.StatusOK, ""),
+	)
+
+	requestBody := `{"id": 1, "amount": "100"}`
+
+	res, err := s.server.Client().Post(s.server.URL+"/users/deposit", "", bytes.NewBufferString(requestBody))
+	s.Require().NoError(err)
+
+	defer res.Body.Close()
+
+	s.Require().Equal(http.StatusOK, res.StatusCode)
+
+	// check response
+	response := api.GetUserResponse{}
+	err = json.NewDecoder(res.Body).Decode(&response)
+	s.Require().NoError(err)
+
+	// so we will check each field separately
+	s.Assert().Equal(1, response.ID)
+	s.Assert().Equal("test_name", response.Name)
+	s.Assert().Equal("100", response.Balance.String())
 }

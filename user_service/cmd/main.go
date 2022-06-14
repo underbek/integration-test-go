@@ -14,7 +14,7 @@ import (
 const (
 	addr        = ":8080"
 	dbDsn       = "host=localhost port=5432 user=user password=user dbname=user sslmode=disable"
-	billingAddr = "localhost:8081"
+	billingAddr = "http://localhost:8085"
 )
 
 func main() {
