@@ -13,6 +13,7 @@ require (
 	github.com/shopspring/decimal v1.3.1
 	github.com/stretchr/testify v1.7.0
 	github.com/testcontainers/testcontainers-go v0.13.0
+	gopkg.in/resty.v1 v1.12.0
 )
 
 require (

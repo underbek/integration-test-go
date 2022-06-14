@@ -6,6 +6,7 @@ import (
 
 	"github.com/AndreyAndreevich/articles/user_service/domain"
 	_ "github.com/lib/pq"
+	"github.com/shopspring/decimal"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -59,4 +60,12 @@ func (s *storage) GetUser(ctx context.Context, id int) (domain.User, error) {
 	}
 
 	return user, nil
+}
+
+func (s *storage) UpdateBalance(ctx context.Context, id int, balance decimal.Decimal) error {
+	query := `UPDATE users SET balance = $1 WHERE id = $2`
+
+	_, err := s.db.ExecContext(ctx, query, balance, id)
+
+	return err
 }
