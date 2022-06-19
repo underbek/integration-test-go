@@ -1,11 +1,10 @@
-package step_2
+package step_7
 
 import (
 	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -47,9 +46,7 @@ func (s *TestSuite) SetupSuite() {
 
 	// copy from main
 	repo, err := storage.New(psqlContainer.GetDSN())
-	if err != nil {
-		log.Fatal(err)
-	}
+	s.Require().NoError(err)
 
 	//added billing client
 	billingClient := billing.New(http.DefaultClient, "http://localhost:8085")

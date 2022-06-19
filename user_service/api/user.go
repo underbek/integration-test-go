@@ -7,7 +7,7 @@ type CreateUserRequest struct {
 }
 
 type User struct {
-	ID      int             `json:"ID"`
+	ID      int             `json:"id"`
 	Name    string          `json:"name"`
 	Balance decimal.Decimal `json:"balance"`
 }
@@ -16,7 +16,7 @@ type CreateUserResponse User
 type GetUserResponse User
 
 type DepositBalanceRequest struct {
-	ID     int             `json:"ID"`
+	ID     int             `json:"id"`
 	Amount decimal.Decimal `json:"amount"`
 }
 

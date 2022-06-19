@@ -1,0 +1,5 @@
+{
+  "id": {{.id}},
+  "name": "test_name",
+  "balance": "0"
+}

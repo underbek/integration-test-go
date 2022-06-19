@@ -1,11 +1,10 @@
-package step_2
+package step_6
 
 import (
 	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -46,9 +45,8 @@ func (s *TestSuite) SetupSuite() {
 
 	// copy from main
 	repo, err := storage.New(psqlContainer.GetDSN())
-	if err != nil {
-		log.Fatal(err)
-	}
+	s.Require().NoError(err)
+
 	useCase := use_case.New(repo, nil)
 	h := handler.New(useCase)
 	///

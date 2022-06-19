@@ -2,7 +2,6 @@ package step_1
 
 import (
 	"bytes"
-	"log"
 	"net/http/httptest"
 	"testing"
 
@@ -10,7 +9,7 @@ import (
 	"github.com/AndreyAndreevich/articles/user_service/server"
 	"github.com/AndreyAndreevich/articles/user_service/storage"
 	"github.com/AndreyAndreevich/articles/user_service/use_case"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -25,9 +24,7 @@ func TestCreateUser(t *testing.T) {
 
 	// copy from main
 	repo, err := storage.New(dbDsn)
-	if err != nil {
-		log.Fatal(err)
-	}
+	require.NoError(t, err)
 	useCase := use_case.New(repo, nil)
 	h := handler.New(useCase)
 	///
@@ -38,5 +35,5 @@ func TestCreateUser(t *testing.T) {
 	srv := httptest.NewServer(server.New("", h).Router)
 
 	_, err = srv.Client().Post(srv.URL+"/users", "", bytes.NewBufferString(requestBody))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }

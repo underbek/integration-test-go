@@ -1,10 +1,9 @@
-package step_2
+package step_3
 
 import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -18,10 +17,10 @@ import (
 	"github.com/AndreyAndreevich/articles/user_service/storage"
 	"github.com/AndreyAndreevich/articles/user_service/use_case"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 /*
-=== RUN   TestCreateUser
 === RUN   TestCreateUser
 2022/06/12 16:44:46 Starting container id: c94311c9ea05 image: docker.io/testcontainers/ryuk:0.3.3
 2022/06/12 16:44:46 Waiting for container id c94311c9ea05 image: docker.io/testcontainers/ryuk:0.3.3
@@ -42,19 +41,17 @@ func TestCreateUser(t *testing.T) {
 
 	psqlContainer, err := step_2.NewPostgreSQLContainer(ctx)
 	defer psqlContainer.Terminate(context.Background())
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	//
 
 	// run migrations
 	err = migrate.Migrate(psqlContainer.GetDSN(), migrate.Migrations)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	//
 
 	// copy from main
 	repo, err := storage.New(psqlContainer.GetDSN())
-	if err != nil {
-		log.Fatal(err)
-	}
+	require.NoError(t, err)
 	useCase := use_case.New(repo, nil)
 	h := handler.New(useCase)
 	///
@@ -65,16 +62,16 @@ func TestCreateUser(t *testing.T) {
 	srv := httptest.NewServer(server.New("", h).Router)
 
 	res, err := srv.Client().Post(srv.URL+"/users", "", bytes.NewBufferString(requestBody))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	defer res.Body.Close()
 
-	assert.Equal(t, http.StatusOK, res.StatusCode)
+	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	// check response
 	response := api.CreateUserResponse{}
 	err = json.NewDecoder(res.Body).Decode(&response)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// id maybe any
 	// so we will check each field separately

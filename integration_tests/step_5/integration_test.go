@@ -1,10 +1,9 @@
-package step_2
+package step_5
 
 import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -19,6 +18,7 @@ import (
 	"github.com/AndreyAndreevich/articles/user_service/use_case"
 	"github.com/go-testfixtures/testfixtures/v3"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 /*
@@ -42,50 +42,48 @@ func TestGetUser(t *testing.T) {
 
 	psqlContainer, err := step_2.NewPostgreSQLContainer(ctx)
 	defer psqlContainer.Terminate(context.Background())
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	//
 
 	// run migrations
 	err = migrate.Migrate(psqlContainer.GetDSN(), migrate.Migrations)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	//
 
 	// copy from main
 	repo, err := storage.New(psqlContainer.GetDSN())
-	if err != nil {
-		log.Fatal(err)
-	}
+	require.NoError(t, err)
 	useCase := use_case.New(repo, nil)
 	h := handler.New(useCase)
 	///
 
 	// create fixtures
 	db, err := sql.Open("postgres", psqlContainer.GetDSN())
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	fixtures, err := testfixtures.New(
 		testfixtures.Database(db),
 		testfixtures.Dialect("postgres"),
 		testfixtures.Directory("fixtures/storage"),
 	)
-	assert.NoError(t, err)
-	assert.NoError(t, fixtures.Load())
+	require.NoError(t, err)
+	require.NoError(t, fixtures.Load())
 	//
 
 	// use httptest
 	srv := httptest.NewServer(server.New("", h).Router)
 
 	res, err := srv.Client().Get(srv.URL + "/users/1")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	defer res.Body.Close()
 
-	assert.Equal(t, http.StatusOK, res.StatusCode)
+	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	// check response
 	response := api.GetUserResponse{}
 	err = json.NewDecoder(res.Body).Decode(&response)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// so we will check each field separately
 	assert.Equal(t, 1, response.ID)
