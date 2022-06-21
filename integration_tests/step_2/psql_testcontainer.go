@@ -3,97 +3,59 @@ package step_2
 import (
 	"context"
 	"fmt"
-
-	"github.com/docker/go-connections/nat"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	_ "github.com/lib/pq"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
+	"time"
 )
 
-// PostgreSQLContainer wraps testcontainers.Container with extra methods.
-type (
-	PostgreSQLContainer struct {
-		testcontainers.Container
-		Config PostgreSQLContainerConfig
-	}
-
-	PostgreSQLContainerOption func(c *PostgreSQLContainerConfig)
-
-	PostgreSQLContainerConfig struct {
-		ImageTag   string
-		User       string
-		Password   string
-		MappedPort string
-		Database   string
-		Host       string
-	}
-)
-
-// GetDSN returns DB connection URL.
-func (c PostgreSQLContainer) GetDSN() string {
-	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", c.Config.User, c.Config.Password, c.Config.Host, c.Config.MappedPort, c.Config.Database)
+type PostgreSQLContainer struct {
+	testcontainers.Container
+	MappedPort string
+	Host       string
 }
 
-// NewPostgreSQLContainer creates and starts a PostgreSQL container.
-func NewPostgreSQLContainer(ctx context.Context, opts ...PostgreSQLContainerOption) (*PostgreSQLContainer, error) {
-	const (
-		psqlImage = "postgres"
-		psqlPort  = "5432"
-	)
+func (c PostgreSQLContainer) GetDSN() string {
+	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", "user", "password", c.Host, c.MappedPort, "postgres_test")
+}
 
-	// Define container ENVs
-	config := PostgreSQLContainerConfig{
-		ImageTag: "11.5",
-		User:     "user",
-		Password: "password",
-		Database: "db_test",
-	}
-	for _, opt := range opts {
-		opt(&config)
-	}
-
-	containerPort := psqlPort + "/tcp"
-
-	// Build testcontainer request
-	req := testcontainers.GenericContainerRequest{
-		ContainerRequest: testcontainers.ContainerRequest{
-			Env: map[string]string{
-				"POSTGRES_USER":     config.User,
-				"POSTGRES_PASSWORD": config.Password,
-				"POSTGRES_DB":       config.Database,
-			},
-			ExposedPorts: []string{
-				containerPort,
-			},
-			Image:      fmt.Sprintf("%s:%s", psqlImage, config.ImageTag),
-			WaitingFor: wait.ForListeningPort(nat.Port(containerPort)),
+func NewPostgreSQLContainer(ctx context.Context) (*PostgreSQLContainer, error) {
+	req := testcontainers.ContainerRequest{
+		Env: map[string]string{
+			"POSTGRES_USER":     "user",
+			"POSTGRES_PASSWORD": "password",
+			"POSTGRES_DB":       "postgres_test",
 		},
-		Started: true,
+		ExposedPorts: []string{"5432/tcp"},
+		Image:        "postgres:14.3",
+		WaitingFor: wait.ForExec([]string{"pg_isready"}).
+			WithPollInterval(1 * time.Second).
+			WithExitCodeMatcher(func(exitCode int) bool {
+				return exitCode == 0
+			}),
 	}
-
-	container, err := testcontainers.GenericContainer(ctx, req)
+	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("getting request provider: %w", err)
+		return nil, err
 	}
 
 	host, err := container.Host(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("getting host for: %w", err)
+		return nil, err
 	}
 
-	// Get mapped port for 5432/tcp
-	mappedPort, err := container.MappedPort(ctx, nat.Port(containerPort))
+	mappedPort, err := container.MappedPort(ctx, "5432")
 	if err != nil {
-		return nil, fmt.Errorf("getting mapped port for (%s): %w", containerPort, err)
+		return nil, err
 	}
-	config.MappedPort = mappedPort.Port()
-	config.Host = host
-
-	fmt.Println("Host:", config.Host, config.MappedPort)
 
 	return &PostgreSQLContainer{
-		Container: container,
-		Config:    config,
+		Container:  container,
+		MappedPort: mappedPort.Port(),
+		Host:       host,
 	}, nil
 }

@@ -47,8 +47,8 @@ func TestCreateUser(t *testing.T) {
 	defer ctxCancel()
 
 	psqlContainer, err := NewPostgreSQLContainer(ctx)
-	defer psqlContainer.Terminate(context.Background())
 	require.NoError(t, err)
+	defer psqlContainer.Terminate(context.Background())
 	//
 
 	// copy from main

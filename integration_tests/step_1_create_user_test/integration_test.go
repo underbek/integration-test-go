@@ -1,4 +1,4 @@
-package step_1
+package step_1_create_user_test
 
 import (
 	"bytes"

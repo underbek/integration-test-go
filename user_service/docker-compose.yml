@@ -1,11 +1,13 @@
-version: '3.7'
+version: '3.8'
 services:
   db:
-    image: postgres
-    container_name: user-db
+    image: postgres:14.3
     ports:
       - "5432:5432"
     environment:
       - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=user
-      - POSTGRES_DB=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=postgres
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 2s
