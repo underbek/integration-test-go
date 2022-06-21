@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	step_2_1 "github.com/AndreyAndreevich/articles/integration_tests/step_2_1_improved_psql_container"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
-	"github.com/AndreyAndreevich/articles/integration_tests/step_2"
 	"github.com/AndreyAndreevich/articles/user_service/api"
 	"github.com/AndreyAndreevich/articles/user_service/handler"
 	"github.com/AndreyAndreevich/articles/user_service/migrate"
@@ -39,7 +39,7 @@ func TestCreateUser(t *testing.T) {
 	ctx, ctxCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer ctxCancel()
 
-	psqlContainer, err := step_2.NewPostgreSQLContainer(ctx)
+	psqlContainer, err := step_2_1.NewPostgreSQLContainer(ctx)
 	defer psqlContainer.Terminate(context.Background())
 	require.NoError(t, err)
 	//

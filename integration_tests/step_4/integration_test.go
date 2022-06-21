@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AndreyAndreevich/articles/integration_tests/step_2"
+	step2 "github.com/AndreyAndreevich/articles/integration_tests/step_2_1_improved_psql_container"
 	"github.com/AndreyAndreevich/articles/user_service/api"
 	"github.com/AndreyAndreevich/articles/user_service/handler"
 	"github.com/AndreyAndreevich/articles/user_service/migrate"
@@ -76,7 +76,7 @@ func TestGetUser(t *testing.T) {
 	ctx, ctxCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer ctxCancel()
 
-	psqlContainer, err := step_2.NewPostgreSQLContainer(ctx)
+	psqlContainer, err := step2.NewPostgreSQLContainer(ctx)
 	defer psqlContainer.Terminate(context.Background())
 	require.NoError(t, err)
 	//
