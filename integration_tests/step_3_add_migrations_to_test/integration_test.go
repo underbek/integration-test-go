@@ -1,4 +1,4 @@
-package step_3
+package step_3_add_migrations_to_test
 
 import (
 	"bytes"

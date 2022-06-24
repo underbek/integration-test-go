@@ -19,8 +19,9 @@ const (
 
 func main() {
 	repo, err := storage.New(dbDsn)
-	require.NoError(t, err)
-
+	if err != nil {
+		log.Fatal(err)
+	}
 	billingClient := billing.New(http.DefaultClient, billingAddr)
 	useCase := use_case.New(repo, billingClient)
 	h := handler.New(useCase)
