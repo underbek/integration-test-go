@@ -3,6 +3,7 @@ package step_2_1_improved_psql_container
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/docker/go-connections/nat"
 	_ "github.com/jackc/pgx/v4/stdlib"
@@ -65,8 +66,12 @@ func NewPostgreSQLContainer(ctx context.Context, opts ...PostgreSQLContainerOpti
 			ExposedPorts: []string{
 				containerPort,
 			},
-			Image:      fmt.Sprintf("%s:%s", psqlImage, config.ImageTag),
-			WaitingFor: wait.ForListeningPort(nat.Port(containerPort)),
+			Image: fmt.Sprintf("%s:%s", psqlImage, config.ImageTag),
+			WaitingFor: wait.ForExec([]string{"pg_isready", "-d", config.Database, "-U", config.User}).
+				WithPollInterval(1 * time.Second).
+				WithExitCodeMatcher(func(exitCode int) bool {
+					return exitCode == 0
+				}),
 		},
 		Started: true,
 	}

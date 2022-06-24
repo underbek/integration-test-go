@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/AndreyAndreevich/articles/user_service/migrate"
 	"log"
 	"net/http"
 
@@ -13,12 +14,16 @@ import (
 
 const (
 	addr        = ":8080"
-	dbDsn       = "host=localhost port=5432 user=user password=user dbname=user sslmode=disable"
+	dbDsn       = "host=localhost port=5432 user=user password=password dbname=postgres sslmode=disable"
 	billingAddr = "http://localhost:8085"
 )
 
 func main() {
 	repo, err := storage.New(dbDsn)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = migrate.Migrate(dbDsn, migrate.Migrations)
 	if err != nil {
 		log.Fatal(err)
 	}

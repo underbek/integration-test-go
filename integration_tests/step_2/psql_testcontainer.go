@@ -29,7 +29,7 @@ func NewPostgreSQLContainer(ctx context.Context) (*PostgreSQLContainer, error) {
 		},
 		ExposedPorts: []string{"5432/tcp"},
 		Image:        "postgres:14.3",
-		WaitingFor: wait.ForExec([]string{"pg_isready"}).
+		WaitingFor: wait.ForExec([]string{"pg_isready", "-d", "postgres_test", "-U", "user"}).
 			WithPollInterval(1 * time.Second).
 			WithExitCodeMatcher(func(exitCode int) bool {
 				return exitCode == 0
