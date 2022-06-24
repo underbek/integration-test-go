@@ -89,7 +89,7 @@ func (s *TestSuite) SetupTest() {
 	fixtures, err := testfixtures.New(
 		testfixtures.Database(db),
 		testfixtures.Dialect("postgres"),
-		testfixtures.Directory("../step_5/fixtures/storage"),
+		testfixtures.Directory("../step_5_add_testfixtures/fixtures/storage"),
 	)
 	s.Require().NoError(err)
 	s.Require().NoError(fixtures.Load())
