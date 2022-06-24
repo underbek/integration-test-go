@@ -55,7 +55,9 @@ func TestGetUser(t *testing.T) {
 	require.NoError(t, err)
 	useCase := use_case.New(repo, nil)
 	h := handler.New(useCase)
-	///
+
+	// use httptest
+	srv := httptest.NewServer(server.New("", h).Router)
 
 	// create fixtures
 	db, err := sql.Open("postgres", psqlContainer.GetDSN())
@@ -70,9 +72,6 @@ func TestGetUser(t *testing.T) {
 	require.NoError(t, fixtures.Load())
 	//
 
-	// use httptest
-	srv := httptest.NewServer(server.New("", h).Router)
-
 	res, err := srv.Client().Get(srv.URL + "/users/1")
 	require.NoError(t, err)
 
@@ -85,7 +84,6 @@ func TestGetUser(t *testing.T) {
 	err = json.NewDecoder(res.Body).Decode(&response)
 	require.NoError(t, err)
 
-	// so we will check each field separately
 	assert.Equal(t, 1, response.ID)
 	assert.Equal(t, "test_name", response.Name)
 	assert.Equal(t, "0", response.Balance.String())
