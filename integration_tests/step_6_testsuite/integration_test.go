@@ -1,4 +1,4 @@
-package step_6
+package step_6_testsuite
 
 import (
 	"bytes"
