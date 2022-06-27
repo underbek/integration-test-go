@@ -1,4 +1,4 @@
-package step_6
+package step_6_testsuite
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AndreyAndreevich/articles/integration_tests/step_2"
+	step2 "github.com/AndreyAndreevich/articles/integration_tests/step_2_1_improved_psql_container"
 	"github.com/AndreyAndreevich/articles/user_service/api"
 	"github.com/AndreyAndreevich/articles/user_service/handler"
 	"github.com/AndreyAndreevich/articles/user_service/migrate"
@@ -23,7 +23,7 @@ import (
 
 type TestSuite struct {
 	suite.Suite
-	psqlContainer *step_2.PostgreSQLContainer
+	psqlContainer *step2.PostgreSQLContainer
 	server        *httptest.Server
 }
 
@@ -32,7 +32,7 @@ func (s *TestSuite) SetupSuite() {
 	ctx, ctxCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer ctxCancel()
 
-	psqlContainer, err := step_2.NewPostgreSQLContainer(ctx)
+	psqlContainer, err := step2.NewPostgreSQLContainer(ctx)
 	s.Require().NoError(err)
 
 	s.psqlContainer = psqlContainer
@@ -105,7 +105,7 @@ func (s *TestSuite) TestGetUser() {
 	fixtures, err := testfixtures.New(
 		testfixtures.Database(db),
 		testfixtures.Dialect("postgres"),
-		testfixtures.Directory("../step_5/fixtures/storage"),
+		testfixtures.Directory("../step_5_add_testfixtures/fixtures/storage"),
 	)
 	s.Require().NoError(err)
 	s.Require().NoError(fixtures.Load())

@@ -3,6 +3,9 @@ package step_2
 import (
 	"bytes"
 	"context"
+	"encoding/json"
+	"github.com/AndreyAndreevich/articles/user_service/api"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -47,8 +50,8 @@ func TestCreateUser(t *testing.T) {
 	defer ctxCancel()
 
 	psqlContainer, err := NewPostgreSQLContainer(ctx)
-	defer psqlContainer.Terminate(context.Background())
 	require.NoError(t, err)
+	defer psqlContainer.Terminate(context.Background())
 	//
 
 	// copy from main
@@ -66,5 +69,17 @@ func TestCreateUser(t *testing.T) {
 	res, err := srv.Client().Post(srv.URL+"/users", "", bytes.NewBufferString(requestBody))
 	require.NoError(t, err)
 
+	defer res.Body.Close()
+
 	require.Equal(t, http.StatusOK, res.StatusCode)
+
+	// check response
+	response := api.CreateUserResponse{}
+	err = json.NewDecoder(res.Body).Decode(&response)
+	require.NoError(t, err)
+
+	// id maybe any
+	// so we will check each field separately
+	assert.Equal(t, "test_name", response.Name)
+	assert.Equal(t, "0", response.Balance.String())
 }

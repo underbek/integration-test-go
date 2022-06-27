@@ -1,14 +1,16 @@
-package step_4
+package step_4_get_user_test
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
+	"github.com/go-testfixtures/testfixtures/v3"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
-	"github.com/AndreyAndreevich/articles/integration_tests/step_2"
+	step2 "github.com/AndreyAndreevich/articles/integration_tests/step_2_1_improved_psql_container"
 	"github.com/AndreyAndreevich/articles/user_service/api"
 	"github.com/AndreyAndreevich/articles/user_service/handler"
 	"github.com/AndreyAndreevich/articles/user_service/migrate"
@@ -76,7 +78,7 @@ func TestGetUser(t *testing.T) {
 	ctx, ctxCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer ctxCancel()
 
-	psqlContainer, err := step_2.NewPostgreSQLContainer(ctx)
+	psqlContainer, err := step2.NewPostgreSQLContainer(ctx)
 	defer psqlContainer.Terminate(context.Background())
 	require.NoError(t, err)
 	//
@@ -93,6 +95,19 @@ func TestGetUser(t *testing.T) {
 	h := handler.New(useCase)
 	///
 
+	// create fixtures
+	db, err := sql.Open("postgres", psqlContainer.GetDSN())
+	require.NoError(t, err)
+
+	fixtures, err := testfixtures.New(
+		testfixtures.Database(db),
+		testfixtures.Dialect("postgres"),
+		testfixtures.Directory("fixtures/storage"),
+	)
+	require.NoError(t, err)
+	require.NoError(t, fixtures.Load())
+	//
+
 	// use httptest
 	srv := httptest.NewServer(server.New("", h).Router)
 
@@ -108,7 +123,6 @@ func TestGetUser(t *testing.T) {
 	err = json.NewDecoder(res.Body).Decode(&response)
 	require.NoError(t, err)
 
-	// id maybe any
 	// so we will check each field separately
 	assert.Equal(t, 1, response.ID)
 	assert.Equal(t, "test_name", response.Name)
