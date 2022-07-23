@@ -1,4 +1,4 @@
-package step_7
+package step_8_httpmock
 
 import (
 	"bytes"
@@ -19,8 +19,11 @@ import (
 	"github.com/AndreyAndreevich/articles/user_service/storage"
 	"github.com/AndreyAndreevich/articles/user_service/use_case"
 	"github.com/go-testfixtures/testfixtures/v3"
+	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/suite"
 )
+
+const billingAddr = "http://localhost:8085"
 
 type TestSuite struct {
 	suite.Suite
@@ -48,8 +51,12 @@ func (s *TestSuite) SetupSuite() {
 	repo, err := storage.New(psqlContainer.GetDSN())
 	s.Require().NoError(err)
 
+	//mock client
+	mockClient := &http.Client{}
+	httpmock.ActivateNonDefault(mockClient)
+
 	//added billing client
-	billingClient := billing.New(http.DefaultClient, "http://localhost:8085")
+	billingClient := billing.New(mockClient, billingAddr)
 	useCase := use_case.New(repo, billingClient)
 	h := handler.New(useCase)
 	///
@@ -66,23 +73,19 @@ func (s *TestSuite) TearDownSuite() {
 	s.Require().NoError(s.psqlContainer.Terminate(ctx))
 
 	s.server.Close()
+
+	httpmock.DeactivateAndReset()
 }
 
 /*
---- FAIL: TestSuite_Run (4.36s)
+--- PASS: TestSuite_Run (4.07s)
+=== RUN   TestSuite_Run/TestCreateUser
+    --- PASS: TestSuite_Run/TestCreateUser (0.01s)
 === RUN   TestSuite_Run/TestDepositBalance
-error Post "http://localhost:8085/deposit": dial tcp [::1]:8085: connect: connection refused
-    integration_test.go:168:
-        	Error Trace:	integration_test.go:168
-        	Error:      	Not equal:
-        	            	expected: 200
-        	            	actual  : 500
-        	Test:       	TestSuite_Run/TestDepositBalance
-    --- FAIL: TestSuite_Run/TestDepositBalance (0.04s)
-
-
-Expected :200
-Actual   :500
+    --- PASS: TestSuite_Run/TestDepositBalance (0.06s)
+=== RUN   TestSuite_Run/TestGetUser
+    --- PASS: TestSuite_Run/TestGetUser (0.07s)
+PASS
 */
 func TestSuite_Run(t *testing.T) {
 	suite.Run(t, new(TestSuite))
@@ -154,6 +157,13 @@ func (s *TestSuite) TestDepositBalance() {
 	s.Require().NoError(err)
 	s.Require().NoError(fixtures.Load())
 	//
+
+	// mock http call
+	httpmock.RegisterResponder(
+		http.MethodPost,
+		billingAddr+"/deposit",
+		httpmock.NewStringResponder(http.StatusOK, ""),
+	)
 
 	requestBody := `{"id": 1, "amount": "100"}`
 
