@@ -1,4 +1,4 @@
-package step_9
+package step_9_api_fixtures
 
 import (
 	"encoding/json"
